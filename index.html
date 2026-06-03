@@ -2,18 +2,21 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>簡易スタンプラリー</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        .grid { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
-        .stamp { width: 80px; height: 80px; border: 2px dashed #ccc; border-radius: 50%; line-height: 80px; color: #ccc; font-weight: bold; }
-        .stamp.active { border: 2px solid #ff4757; color: #ff4757; background-color: #ffeaa7; }
+        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f8f9fa; }
+        .grid { display: flex; justify-content: center; gap: 20px; margin-top: 30px; }
+        .stamp { width: 90px; height: 90px; border: 3px dashed #ccc; border-radius: 50%; line-height: 90px; color: #ccc; font-weight: bold; background: white; transition: all 0.3s; }
+        .stamp.active { border: 3px solid #ff4757; color: #ff4757; background-color: #ffeaa7; transform: scale(1.1); }
+        #message { font-weight: bold; color: #333; margin-top: 20px; height: 20px; }
+        .clear-btn { margin-top: 50px; padding: 8px 16px; background-color: #e0e0e0; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <h1>デジタルスタンプラリー</h1>
-    <p id="message">スポットを巡ってスタンプを集めよう！</p>
+    <p id="message">QRコードをスキャンしてスタンプを集めよう！</p>
 
     <div class="grid">
         <div id="spot1" class="stamp">スポット1</div>
@@ -21,28 +24,50 @@
         <div id="spot3" class="stamp">スポット3</div>
     </div>
 
-    <script>
-        // 1. ローカルストレージから現在の進捗を読み込む（なければ空のオブジェクト）
-        let progress = JSON.parse(localStorage.getItem('stamp_rally_progress')) || {};
+    <button class="clear-btn" onclick="resetStamps()">スタンプをリセットする</button>
 
-        // 2. URLのパラメータ（例: ?spot=spot1）をチェックする
+    <script>
+        const STORAGE_KEY = 'stamp_rally_progress_v2';
+
+        // 1. 過去の保存データを「安全に」読み込む
+        let progress = {};
+        try {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                progress = JSON.parse(savedData);
+            }
+        } catch (e) {
+            console.error("データの読み込みに失敗しました", e);
+        }
+
+        // 2. URLのパラメータ（?spot=xxx）を取得
         const urlParams = new URLSearchParams(window.location.search);
         const currentSpot = urlParams.get('spot');
 
-        // 3. もしスポットのパラメータがあれば、進捗を「獲得済」にして保存
+        // 3. 新しいスポットがスキャンされたら、過去のデータに「追加」して保存
         if (currentSpot && ['spot1', 'spot2', 'spot3'].includes(currentSpot)) {
-            progress[currentSpot] = true;
-            localStorage.setItem('stamp_rally_progress', JSON.stringify(progress));
-            document.getElementById('message').innerText = `${currentSpot} のスタンプをゲットしました！`;
+            progress[currentSpot] = true; // 過去のデータを保持したまま、新しいスポットをONにする
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+            document.getElementById('message').innerText = `「${currentSpot}」のスタンプをゲット！`;
         }
 
-        // 4. 進捗に合わせて画面（スタンプ台紙）の表示を更新
+        // 4. 画面のスタンプ台紙に反映する
         Object.keys(progress).forEach(spotId => {
             if (progress[spotId]) {
                 const element = document.getElementById(spotId);
-                if (element) element.classList.add('active'); // 獲得済みのスタイルを適用
+                if (element) {
+                    element.classList.add('active');
+                }
             }
         });
+
+        // テスト検証用にデータを消去する機能
+        function resetStamps() {
+            if (confirm('スタンプをすべて消去して最初からやり直しますか？')) {
+                localStorage.removeItem(STORAGE_KEY);
+                window.location.href = window.location.pathname; // パラメータを消してリロード
+            }
+        }
     </script>
 </body>
 </html>
