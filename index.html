@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>簡易スタンプラリー</title>
+
     <style>
         body {
             font-family: sans-serif;
@@ -23,19 +24,19 @@
         .stamp {
             width: 90px;
             height: 90px;
-            border: 3px dashed #ccc;
+            border: 3px dashed #a0c4ff;
             border-radius: 50%;
             line-height: 90px;
-            color: #ccc;
+            color: #a0c4ff;
             font-weight: bold;
             background: white;
             transition: all 0.3s;
         }
 
         .stamp.active {
-            border: 3px solid #ff4757;
-            color: #ff4757;
-            background-color: #ffeaa7;
+            border: 3px solid #0984e3;
+            color: #0984e3;
+            background-color: #d8f3dc;
             transform: scale(1.1);
         }
 
@@ -56,14 +57,14 @@
             display: none;
             margin-top: 30px;
             padding: 20px;
-            background: linear-gradient(135deg, #7fffd4, #7fffd4);
+            background: linear-gradient(135deg, #a8e6cf, #dcedc1);
             border-radius: 12px;
             animation: fadeIn 0.6s ease;
         }
 
         #reward-area h2 {
             margin: 0 0 10px;
-            color: #4169e1;
+            color: #0984e3;
         }
 
         #reward-area p {
@@ -75,7 +76,7 @@
         .form-link-btn {
             display: inline-block;
             padding: 12px 28px;
-            background-color: #0984e3;
+            background-color: #00b894;
             color: #fff;
             text-decoration: none;
             border-radius: 8px;
@@ -85,24 +86,31 @@
         }
 
         .form-link-btn:hover {
-            background-color: #0652DD;
+            background-color: #019875;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .clear-btn {
             margin-top: 50px;
             padding: 8px 16px;
-            background-color: #e0e0e0;
+            background-color: #b2bec3;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
     </style>
 </head>
+
 <body>
 
     <h1>🗺️ デジタルスタンプラリー</h1>
@@ -117,13 +125,24 @@
 
     <div id="reward-area">
         <h2>🎉 おめでとうございます！</h2>
-        <p>スタンプが規定数に達しました！<br>下のボタンから応募フォームにお進みください。</p>
-        <a id="form-link" class="form-link-btn" href="#" target="_blank" rel="noopener">
+        <p>
+            スタンプが規定数に達しました！<br>
+            下のボタンから応募フォームにお進みください。
+        </p>
+        <a
+            id="form-link"
+            class="form-link-btn"
+            href="#"
+            target="_blank"
+            rel="noopener"
+        >
             📝 応募フォームへ進む
         </a>
     </div>
 
-    <button class="clear-btn" onclick="resetStamps()">スタンプをリセットする</button>
+    <button class="clear-btn" onclick="resetStamps()">
+        スタンプをリセットする
+    </button>
 
     <script>
         const GOOGLE_FORM_BASE_URL =
@@ -142,6 +161,7 @@
 
         try {
             const savedData = localStorage.getItem(STORAGE_KEY);
+
             if (savedData) {
                 progress = JSON.parse(savedData);
             }
@@ -155,18 +175,20 @@
         if (currentSpot && ALL_SPOTS.includes(currentSpot)) {
             progress[currentSpot] = true;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-            document.getElementById('message').innerText = `「${currentSpot}」のスタンプをゲット！`;
+            document.getElementById('message').innerText =
+                `「${currentSpot}」のスタンプをゲット！`;
         }
 
         let collectedCount = 0;
         const collectedSpots = [];
 
-        ALL_SPOTS.forEach(spotId => {
+        ALL_SPOTS.forEach((spotId) => {
             if (progress[spotId]) {
                 collectedCount++;
                 collectedSpots.push(spotId);
 
                 const element = document.getElementById(spotId);
+
                 if (element) {
                     element.classList.add('active');
                 }
@@ -174,21 +196,32 @@
         });
 
         document.getElementById('progress-bar').innerText =
-            `スタンプ: ${collectedCount} / ${ALL_SPOTS.length}（達成まであと ${Math.max(0, REQUIRED_STAMPS - collectedCount)} 個）`;
+            `スタンプ: ${collectedCount} / ${ALL_SPOTS.length}（達成まであと ${Math.max(
+                0,
+                REQUIRED_STAMPS - collectedCount
+            )} 個）`;
 
         if (collectedCount >= REQUIRED_STAMPS) {
-            document.getElementById('message').innerText = '🎊 全スタンプ達成！';
+            document.getElementById('message').innerText =
+                '🎊 全スタンプ達成！';
+
             document.getElementById('progress-bar').innerText =
                 `スタンプ: ${collectedCount} / ${ALL_SPOTS.length}（達成！）`;
 
-            const formUrl = GOOGLE_FORM_BASE_URL
-                + `&${FORM_ENTRY_IDS.stamps}=${encodeURIComponent(collectedSpots.join(','))}`
-                + `&${FORM_ENTRY_IDS.count}=${encodeURIComponent(collectedCount)}`;
+            const formUrl =
+                GOOGLE_FORM_BASE_URL +
+                `&${FORM_ENTRY_IDS.stamps}=${encodeURIComponent(
+                    collectedSpots.join(',')
+                )}` +
+                `&${FORM_ENTRY_IDS.count}=${encodeURIComponent(
+                    collectedCount
+                )}`;
 
             console.log('Generated Form URL:', formUrl);
 
             const formLink = document.getElementById('form-link');
             formLink.href = formUrl;
+
             document.getElementById('reward-area').style.display = 'block';
         }
 
@@ -199,5 +232,6 @@
             }
         }
     </script>
+
 </body>
 </html>
