@@ -12,9 +12,8 @@
         #message { font-weight: bold; color: #333; margin-top: 20px; min-height: 20px; }
         #progress-bar { margin-top: 15px; font-size: 14px; color: #666; }
 
-        /* ===== 達成時のリンク表示エリア ===== */
         #reward-area {
-            display: none;              /* 初期状態では非表示 */
+            display: none;
             margin-top: 30px;
             padding: 20px;
             background: linear-gradient(135deg, #ffecd2, #fcb69f);
@@ -52,11 +51,10 @@
         <div id="spot3" class="stamp">スポット3</div>
     </div>
 
-    <!-- ===== 達成時に表示されるエリア ===== -->
     <div id="reward-area">
         <h2>🎉 おめでとうございます！</h2>
         <p>スタンプが規定数に達しました！<br>下のボタンからアンケート（応募フォーム）にお進みください。</p>
-        <a id="form-link" class="form-link-btn" href="#" target="_blank" rel="noopener">
+        #
             📝 応募フォームへ進む
         </a>
     </div>
@@ -64,33 +62,17 @@
     <button class="clear-btn" onclick="resetStamps()">スタンプをリセットする</button>
 
     <script>
-        // ============================================================
-        //  ★ 設定エリア — ここだけ書き換えてください ★
-        // ============================================================
-
-        // Google Form の基本URL（「事前入力したURLを取得」で得られるもの）
         const GOOGLE_FORM_BASE_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfANqr-pSf8YsipbWxG2BcfpK0Ewu2GmLzGp9SPbitEzAIeEA/viewform?usp=pp_url';
 
-        // Google Form 内の各フィールドの entry ID
-        // ※ 取得方法は後述
         const FORM_ENTRY_IDS = {
-            stamps:  'entry.1967784020',   // 例: 取得済みスタンプ一覧を渡すフィールド
-            count:   'entry.775462935',   // 例: 取得数を渡すフィールド
+            stamps: 'entry.1967784020',
+            count: 'entry.775462935',
         };
 
-        // 全スポットIDの一覧
         const ALL_SPOTS = ['spot1', 'spot2', 'spot3'];
-
-        // 達成に必要なスタンプ数（例: 全3個中2個でOKにする場合は 2）
         const REQUIRED_STAMPS = 3;
-
         const STORAGE_KEY = 'stamp_rally_progress_v2';
 
-        // ============================================================
-        //  ロジック
-        // ============================================================
-
-        // 1. 過去の保存データを読み込む
         let progress = {};
         try {
             const savedData = localStorage.getItem(STORAGE_KEY);
@@ -101,18 +83,15 @@
             console.error("データの読み込みに失敗しました", e);
         }
 
-        // 2. URLのパラメータ（?spot=xxx）を取得
         const urlParams = new URLSearchParams(window.location.search);
         const currentSpot = urlParams.get('spot');
 
-        // 3. 新しいスポットがスキャンされたら保存
         if (currentSpot && ALL_SPOTS.includes(currentSpot)) {
             progress[currentSpot] = true;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
             document.getElementById('message').innerText = `「${currentSpot}」のスタンプをゲット！`;
         }
 
-        // 4. 画面のスタンプ台紙に反映する
         let collectedCount = 0;
         const collectedSpots = [];
 
@@ -127,28 +106,24 @@
             }
         });
 
-        // 5. 進捗表示
-        document.getElementById('progress-bar').innerText
-            = `スタンプ: ${collectedCount} / ${ALL_SPOTS.length}（達成まであと ${Math.max(0, REQUIRED_STAMPS - collectedCount)} 個）`;
+        document.getElementById('progress-bar').innerText =
+            `スタンプ: ${collectedCount} / ${ALL_SPOTS.length}（達成まであと ${Math.max(0, REQUIRED_STAMPS - collectedCount)} 個）`;
 
-        // 6. ★ 達成判定 → Google Form リンクを表示 ★
         if (collectedCount >= REQUIRED_STAMPS) {
-            // メッセージ更新
             document.getElementById('message').innerText = '🎊 全スタンプ達成！';
-            document.getElementById('progress-bar').innerText
-                = `スタンプ: ${collectedCount} / ${ALL_SPOTS.length}（達成！）`;
+            document.getElementById('progress-bar').innerText =
+                `スタンプ: ${collectedCount} / ${ALL_SPOTS.length}（達成！）`;
 
-            // Google Form の事前入力URLを組み立てる
             const formUrl = GOOGLE_FORM_BASE_URL
                 + `&${FORM_ENTRY_IDS.stamps}=${encodeURIComponent(collectedSpots.join(','))}`
                 + `&${FORM_ENTRY_IDS.count}=${encodeURIComponent(collectedCount)}`;
 
-            // リンクをセットして表示
+            console.log('Generated Form URL:', formUrl);
+
             document.getElementById('form-link').href = formUrl;
             document.getElementById('reward-area').style.display = 'block';
         }
 
-        // リセット
         function resetStamps() {
             if (confirm('スタンプをすべて消去して最初からやり直しますか？')) {
                 localStorage.removeItem(STORAGE_KEY);
