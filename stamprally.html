@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>OC Stamp Rally</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg:#f4f2ee;
+    --panel:#faf9f6;
+    --ink:#1c1c1a;
+    --sub:#6b6b64;
+    --line:#e2ded6;
+    --gold:#a89264;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:"Hiragino Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  ::selection{background:#e7e2d8;}
+
+  /* ===== HERO / 3D MAIN VISUAL (90vh on desktop) ===== */
+  .hero{
+    position:relative;
+    height:90vh;
+    min-height:520px;
+    width:100%;
+    overflow:hidden;
+    background:var(--bg);
+  }
+  #bg3d{position:absolute;inset:0;display:block;}
+  .hero-content{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;pointer-events:none;z-index:3;
+  }
+  .eyebrow{
+    pointer-events:auto;font-size:12px;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--sub);font-weight:700;margin-bottom:26px;animation:rise .9s ease both;
+  }
+  .hero h1{
+    font-size:clamp(40px,8vw,92px);line-height:1.0;font-weight:800;letter-spacing:-0.03em;color:var(--ink);
+    animation:rise 1s .05s ease both;
+  }
+  .hero h1 .thin{font-weight:300;display:block;font-size:.42em;letter-spacing:.02em;color:var(--sub);margin-top:18px;}
+  .hero .sub{
+    margin-top:22px;font-size:clamp(14px,2.2vw,17px);font-weight:500;color:var(--sub);max-width:520px;line-height:1.8;
+    animation:rise 1s .15s ease both;
+  }
+  .cta-row{
+    margin-top:38px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;pointer-events:auto;
+    animation:rise 1s .25s ease both;
+  }
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 30px;border-radius:2px;font-weight:600;font-size:14px;letter-spacing:.04em;
+    text-decoration:none;cursor:pointer;transition:all .3s ease;
+  }
+  .btn-primary{color:#faf9f6;background:var(--ink);border:1px solid var(--ink);}
+  .btn-primary:hover{background:transparent;color:var(--ink);}
+  .btn-ghost{color:var(--ink);background:transparent;border:1px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--ink);}
+
+  .scroll-hint{
+    position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:3;
+    color:var(--sub);font-size:11px;font-weight:600;letter-spacing:.22em;
+    display:flex;flex-direction:column;align-items:center;gap:10px;animation:rise 1s .4s ease both;
+  }
+  .scroll-hint .bar{width:1px;height:34px;background:var(--sub);opacity:.5;position:relative;overflow:hidden;}
+  .scroll-hint .bar::after{content:"";position:absolute;top:-34px;left:0;width:1px;height:34px;background:var(--ink);animation:slide 1.8s infinite;}
+  @keyframes slide{0%{top:-34px;}100%{top:34px;}}
+  @keyframes rise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ===== CONTENT ===== */
+  .wrap{max-width:860px;margin:0 auto;padding:96px 24px 80px;}
+  .kicker{text-align:center;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:700;}
+  .section-title{text-align:center;font-size:clamp(24px,4vw,34px);font-weight:700;letter-spacing:-.01em;margin-top:14px;}
+  .section-lead{text-align:center;color:var(--sub);margin-top:14px;font-weight:500;line-height:1.8;}
+  .rule{width:40px;height:1px;background:var(--line);margin:26px auto 0;}
+
+  .panel{margin-top:48px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:44px 34px;}
+  #message{text-align:center;font-weight:600;font-size:16px;color:var(--ink);min-height:22px;}
+  #progress-bar{text-align:center;margin-top:8px;color:var(--sub);font-weight:500;font-size:13px;letter-spacing:.02em;}
+  .track{margin:24px auto 0;max-width:440px;height:3px;background:var(--line);overflow:hidden;border-radius:2px;}
+  .track > i{display:block;height:100%;width:0%;background:var(--ink);transition:width 1s cubic-bezier(.2,.8,.2,1);}
+
+  .grid{display:flex;justify-content:center;gap:22px;margin-top:44px;flex-wrap:wrap;}
+  .stamp{
+    position:relative;width:112px;height:112px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    font-weight:600;font-size:11px;letter-spacing:.14em;color:var(--sub);background:#fff;border:1px solid var(--line);
+    transition:all .45s cubic-bezier(.2,.8,.2,1);
+  }
+  .stamp .em{font-size:22px;margin-bottom:6px;filter:grayscale(1);opacity:.35;transition:all .4s;}
+  .stamp.active{color:#faf9f6;background:var(--ink);border-color:var(--ink);transform:translateY(-4px);}
+  .stamp.active .em{filter:none;opacity:1;}
+  .stamp.active::before{content:"";position:absolute;top:-5px;right:-5px;width:22px;height:22px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;animation:pop .5s ease both;}
+  .stamp.active::after{content:"✓";position:absolute;top:-5px;right:-5px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;animation:pop .5s ease both;}
+  @keyframes pop{0%{transform:scale(0);}70%{transform:scale(1.2);}100%{transform:scale(1);}}
+
+  #reward-area{display:none;margin-top:44px;text-align:center;border-top:1px solid var(--line);padding-top:40px;animation:rise .6s ease both;}
+  #reward-area .kicker{color:var(--gold);}
+  #reward-area h2{font-size:22px;font-weight:700;margin-top:12px;}
+  #reward-area p{color:var(--sub);font-weight:500;margin:14px 0 26px;line-height:1.8;}
+  .form-link-btn{display:inline-flex;align-items:center;gap:8px;padding:15px 34px;border-radius:2px;font-weight:600;font-size:14px;letter-spacing:.04em;color:#faf9f6;text-decoration:none;background:var(--ink);border:1px solid var(--ink);transition:all .3s;}
+  .form-link-btn:hover{background:transparent;color:var(--ink);}
+
+  .foot-actions{text-align:center;margin-top:48px;}
+  .clear-btn{padding:10px 22px;border-radius:2px;border:1px solid var(--line);background:transparent;color:var(--sub);font-weight:600;font-size:13px;cursor:pointer;transition:all .3s;}
+  .clear-btn:hover{border-color:var(--ink);color:var(--ink);}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:48px;}
+  .step{background:var(--panel);padding:34px 22px;text-align:center;}
+  .step .no{font-size:12px;letter-spacing:.2em;color:var(--gold);font-weight:700;}
+  .step h3{font-size:15px;font-weight:700;margin-top:12px;}
+  .step p{font-size:13px;color:var(--sub);margin-top:8px;line-height:1.7;}
+
+  footer{text-align:center;padding:36px;color:var(--sub);font-size:12px;letter-spacing:.08em;border-top:1px solid var(--line);}
+
+  /* =========================================================
+     MOBILE : 1画面完結レイアウト（スクロール最小化）
+     3Dビジュアル＋スタンプ＋メニューを 100dvh に収める
+     ========================================================= */
+  @media(max-width:600px){
+    /* ヒーローを画面上部の一部に圧縮 */
+    .hero{height:34dvh;min-height:200px;}
+    .hero-content{justify-content:center;padding:14px;}
+    .eyebrow{margin-bottom:8px;font-size:10px;letter-spacing:.26em;}
+    .hero h1{font-size:34px;}
+    .hero h1 .thin{font-size:.4em;margin-top:8px;}
+    .hero .sub{display:none;}           /* 省スペース化 */
+    .cta-row{display:none;}             /* 下部パネルに集約 */
+    .scroll-hint{display:none;}
+
+    /* 残りの領域にパネルを収める（縦フィット） */
+    .wrap{
+      height:66dvh;
+      max-width:none;margin:0;padding:0;
+      display:flex;flex-direction:column;
+    }
+    .kicker, .section-title, .rule, .section-lead{display:none;} /* 見出し省略で圧縮 */
+
+    .panel{
+      flex:1;min-height:0;margin:0;border:none;border-top:1px solid var(--line);
+      border-radius:16px 16px 0 0;background:var(--panel);
+      padding:18px 18px calc(14px + env(safe-area-inset-bottom));
+      display:flex;flex-direction:column;justify-content:space-between;
+      box-shadow:0 -8px 24px rgba(0,0,0,.05);
+    }
+    #message{font-size:14px;min-height:0;}
+    #progress-bar{margin-top:4px;font-size:12px;}
+    .track{margin-top:12px;max-width:none;}
+
+    .grid{gap:14px;margin-top:0;}
+    .stamp{width:88px;height:88px;font-size:10px;letter-spacing:.1em;}
+    .stamp .em{font-size:20px;margin-bottom:4px;}
+
+    /* 常時見えるメニュー（ボタン群） */
+    .m-menu{display:flex;gap:10px;margin-top:4px;}
+    .m-menu .btn{flex:1;padding:13px 10px;font-size:13px;}
+
+    .foot-actions{margin-top:2px;}
+    .clear-btn{padding:8px 16px;font-size:12px;}
+
+    /* 遊び方は下にスクロールした人向けに残すが、初期表示外 */
+    #howto{margin-top:0;padding-top:40px;}
+    .steps{grid-template-columns:1fr;margin-top:20px;}
+    .step{padding:22px;}
+    footer{padding:24px;}
+  }
+
+  /* PC ではモバイル専用メニューを隠す */
+  .m-menu{display:none;}
+</style>
+</head>
+<body>
+
+  <!-- ============ 3D HERO ============ -->
+  <header class="hero">
+    <canvas id="bg3d"></canvas>
+    <div class="hero-content">
+      <div class="eyebrow">Open Campus · Stamp Rally 2026</div>
+      <h1>Stamp Rally<span class="thin">集めて、めぐる。</span></h1>
+      <p class="sub">キャンパスに散らばるQRをスキャンして、スタンプをコンプリート。
+        すべてそろえて特典の応募フォームへ。</p>
+      <div class="cta-row">
+        <a href="#rally" class="btn btn-primary">スタンプを確認する</a>
+        <a href="#howto" class="btn btn-ghost">遊び方を見る</a>
+      </div>
+    </div>
+    <div class="scroll-hint"><div class="bar"></div>SCROLL</div>
+  </header>
+
+  <!-- ============ CONTENT ============ -->
+  <main class="wrap" id="rally">
+    <div class="kicker">Your Collection</div>
+    <h2 class="section-title">スタンプコレクション</h2>
+    <div class="rule"></div>
+    <p class="section-lead">各スポットのQRを読み込むと、自動でスタンプが点灯します。</p>
+
+    <section class="panel">
+      <div>
+        <p id="message">QRをスキャンしてスタンプを集めよう。</p>
+        <p id="progress-bar"></p>
+        <div class="track"><i id="track-fill"></i></div>
+      </div>
+
+      <div class="grid">
+        <div id="spot1" class="stamp"><span class="em">🏛</span>SPOT 1</div>
+        <div id="spot2" class="stamp"><span class="em">🔬</span>SPOT 2</div>
+        <div id="spot3" class="stamp"><span class="em">🎨</span>SPOT 3</div>
+      </div>
+
+      <div id="reward-area">
+        <div class="kicker">Congratulations</div>
+        <h2>応募条件を達成しました</h2>
+        <p>スタンプが規定数に達しました。<br/>下のボタンから応募フォームへお進みください。</p>
+        <a id="form-link" class="form-link-btn" href="#" target="_blank" rel="noopener">応募フォームへ進む →</a>
+      </div>
+
+      <!-- モバイル常時メニュー -->
+      <div class="m-menu">
+        <a href="#howto" class="btn btn-ghost">遊び方</a>
+        <button class="btn btn-primary" onclick="resetStamps()">リセット</button>
+      </div>
+
+      <div class="foot-actions">
+        <button class="clear-btn" onclick="resetStamps()">スタンプをリセットする</button>
+      </div>
+    </section>
+
+    <div id="howto" style="margin-top:96px;">
+      <div class="kicker">How to Play</div>
+      <h2 class="section-title">遊び方はかんたん</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="no">01</div><h3>QRを探す</h3><p>各スポットに設置されたQRコードを見つけます。</p></div>
+      <div class="step"><div class="no">02</div><h3>スキャン</h3><p>スマホのカメラで読み込むとスタンプが点灯。</p></div>
+      <div class="step"><div class="no">03</div><h3>応募する</h3><p>規定数を集めてフォームから特典に応募。</p></div>
+    </div>
+  </main>
+
+  <footer>© 2026 OC Stamp Rally · Powered by Three.js</footer>
+
+<script>
+/* ===== THREE.JS : シックな3D（2要素）===== */
+(function(){
+  const canvas = document.getElementById('bg3d');
+  const scene  = new THREE.Scene();
+  const INK = 0x1c1c1a, GOLD = 0xa89264;
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+  camera.position.set(0, 0, 10);
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+  const key = new THREE.DirectionalLight(0xffffff, 0.6); key.position.set(4,6,8); scene.add(key);
+
+  // ① ワイヤーフレーム多面体
+  const group = new THREE.Group(); scene.add(group);
+  const geo = new THREE.IcosahedronGeometry(2.6, 1);
+  group.add(new THREE.LineSegments(new THREE.WireframeGeometry(geo),
+    new THREE.LineBasicMaterial({color:INK, transparent:true, opacity:0.32})));
+  const dotMat = new THREE.MeshBasicMaterial({color:GOLD});
+  const dotGeo = new THREE.SphereGeometry(0.045, 12, 12);
+  const posAttr = geo.attributes.position; const seen = new Set();
+  for(let i=0;i<posAttr.count;i++){
+    const x=posAttr.getX(i),y=posAttr.getY(i),z=posAttr.getZ(i);
+    const k=x.toFixed(2)+','+y.toFixed(2)+','+z.toFixed(2);
+    if(seen.has(k))continue; seen.add(k);
+    const d=new THREE.Mesh(dotGeo,dotMat); d.position.set(x,y,z); group.add(d);
+  }
+  const inner = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(1.5,0)),
+    new THREE.LineBasicMaterial({color:INK, transparent:true, opacity:0.15}));
+  group.add(inner);
+
+  // ② 微粒子
+  const COUNT=420, pGeo=new THREE.BufferGeometry(), pos=new Float32Array(COUNT*3);
+  for(let i=0;i<COUNT;i++){
+    const r=5+Math.random()*11, t=Math.random()*Math.PI*2, p=Math.acos(2*Math.random()-1);
+    pos[i*3]=r*Math.sin(p)*Math.cos(t); pos[i*3+1]=r*Math.sin(p)*Math.sin(t)*0.72; pos[i*3+2]=r*Math.cos(p)-5;
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({color:INK,size:0.03,transparent:true,opacity:0.4,depthWrite:false})));
+  const particles = scene.children[scene.children.length-1];
+
+  const mouse={x:0,y:0,tx:0,ty:0};
+  window.addEventListener('pointermove', e=>{mouse.tx=(e.clientX/window.innerWidth-0.5);mouse.ty=(e.clientY/window.innerHeight-0.5);});
+  window.addEventListener('deviceorientation', e=>{if(e.gamma!=null){mouse.tx=Math.max(-.5,Math.min(.5,e.gamma/45));mouse.ty=Math.max(-.5,Math.min(.5,e.beta/90));}});
+
+  function resize(){
+    const w=window.innerWidth, h=document.querySelector('.hero').clientHeight;
+    renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize); resize();
+
+  const clock=new THREE.Clock();
+  function tick(){
+    const t=clock.getElapsedTime();
+    group.rotation.x=t*0.10; group.rotation.y=t*0.16;
+    inner.rotation.x=-t*0.22; inner.rotation.y=-t*0.18;
+    particles.rotation.y=t*0.02;
+    mouse.x+=(mouse.tx-mouse.x)*0.04; mouse.y+=(mouse.ty-mouse.y)*0.04;
+    camera.position.x=mouse.x*2.4; camera.position.y=-mouse.y*1.6; camera.lookAt(0,0,0);
+    renderer.render(scene,camera); requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+/* ===== STAMP RALLY LOGIC (元機能を継承) ===== */
+const GOOGLE_FORM_BASE_URL =
+  'https://docs.google.com/forms/d/e/1FAIpQLSfANqr-pSf8YsipbWxG2BcfpK0Ewu2GmLzGp9SPbitEzAIeEA/viewform?usp=pp_url';
+const FORM_ENTRY_IDS = { stamps:'entry.1967784020', count:'entry.775462935' };
+const ALL_SPOTS = ['spot1','spot2','spot3'];
+const REQUIRED_STAMPS = 1;
+const STORAGE_KEY = 'stamp_rally_progress_v2';
+
+let progress = {};
+try{ const s=localStorage.getItem(STORAGE_KEY); if(s) progress=JSON.parse(s); }
+catch(e){ console.error('データの読み込みに失敗しました', e); }
+
+const urlParams = new URLSearchParams(window.location.search);
+const currentSpot = urlParams.get('spot');
+if(currentSpot && ALL_SPOTS.includes(currentSpot)){
+  progress[currentSpot]=true;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  document.getElementById('message').innerText = `「${currentSpot}」のスタンプをゲット！`;
+}
+
+let collectedCount=0; const collectedSpots=[];
+ALL_SPOTS.forEach(id=>{
+  if(progress[id]){ collectedCount++; collectedSpots.push(id);
+    const el=document.getElementById(id); if(el) el.classList.add('active'); }
+});
+
+document.getElementById('progress-bar').innerText =
+  `スタンプ ${collectedCount} / ${ALL_SPOTS.length}　（達成まであと ${Math.max(0, REQUIRED_STAMPS-collectedCount)} 個）`;
+document.getElementById('track-fill').style.width =
+  Math.min(100, (collectedCount/ALL_SPOTS.length)*100) + '%';
+
+if(collectedCount >= REQUIRED_STAMPS){
+  document.getElementById('message').innerText = '応募条件を達成しました。';
+  document.getElementById('progress-bar').innerText =
+    `スタンプ ${collectedCount} / ${ALL_SPOTS.length}　（達成）`;
+  const formUrl = GOOGLE_FORM_BASE_URL +
+    `&${FORM_ENTRY_IDS.stamps}=${encodeURIComponent(collectedSpots.join(','))}` +
+    `&${FORM_ENTRY_IDS.count}=${encodeURIComponent(collectedCount)}`;
+  document.getElementById('form-link').href = formUrl;
+  document.getElementById('reward-area').style.display = 'block';
+}
+
+function resetStamps(){
+  if(confirm('スタンプをすべて消去して最初からやり直しますか？')){
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.href = window.location.pathname;
+  }
+}
+</script>
+</body>
+</html>
