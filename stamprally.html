@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>OC Stamp Rally</title>
 
-<script src="https://cdnjscript>
+https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.jsscript>
 
 <style>
 :root{
@@ -23,10 +23,17 @@
   box-sizing:border-box;
 }
 
+html,
+body{
+  width:100%;
+  min-height:100%;
+}
+
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Segoe UI",sans-serif;
   background:var(--bg);
   color:var(--text);
+  overflow-x:hidden;
 }
 
 /* HERO */
@@ -34,7 +41,9 @@ body{
 .hero{
   position:relative;
   height:90vh;
+  min-height:520px;
   overflow:hidden;
+  background:var(--bg);
 }
 
 #bg3d{
@@ -42,6 +51,7 @@ body{
   inset:0;
   width:100%;
   height:100%;
+  display:block;
 }
 
 .hero-content{
@@ -54,6 +64,7 @@ body{
   text-align:center;
   z-index:2;
   pointer-events:none;
+  padding:24px;
 }
 
 .hero-content h1{
@@ -65,6 +76,7 @@ body{
 .hero-content p{
   margin-top:12px;
   color:var(--sub);
+  font-size:16px;
 }
 
 /* CONTENT */
@@ -91,6 +103,7 @@ body{
   margin-top:8px;
   text-align:center;
   color:var(--sub);
+  font-size:14px;
 }
 
 .track{
@@ -126,6 +139,8 @@ body{
   justify-content:center;
   background:white;
   transition:.3s;
+  font-size:13px;
+  line-height:1.5;
 }
 
 .stamp.active{
@@ -148,6 +163,11 @@ body{
   padding:14px 20px;
   border-radius:10px;
   font-weight:700;
+  text-decoration:none;
+  text-align:center;
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
 }
 
 .btn-primary{
@@ -158,20 +178,42 @@ body{
 .btn-secondary{
   background:white;
   border:1px solid var(--line);
+  color:var(--text);
 }
 
 #reward-area{
   display:none;
   margin-top:24px;
   text-align:center;
+  border-top:1px solid var(--line);
+  padding-top:24px;
+}
+
+#reward-area h3{
+  font-size:18px;
+}
+
+#reward-area p{
+  margin-top:8px;
+  color:var(--sub);
+  font-size:14px;
+}
+
+.form-link{
+  margin-top:16px;
 }
 
 /* MOBILE FIX */
 
 @media (max-width:600px){
 
+  body{
+    min-height:100dvh;
+  }
+
   .hero{
     height:220px;
+    min-height:220px;
   }
 
   .hero-content h1{
@@ -183,25 +225,40 @@ body{
   }
 
   .container{
-    padding:16px;
-    margin-top:-10px;
+    padding:14px;
+    margin-top:0;
   }
 
   .card{
     padding:16px;
+    border-radius:14px;
+  }
+
+  #message{
+    font-size:14px;
+  }
+
+  #progress-bar{
+    font-size:12px;
+  }
+
+  .track{
+    margin-top:12px;
   }
 
   .grid{
     gap:10px;
+    margin-top:20px;
   }
 
   .stamp{
     width:80px;
     height:80px;
-    font-size:12px;
+    font-size:11px;
   }
 
   .actions{
+    margin-top:18px;
     flex-direction:column;
   }
 
@@ -210,9 +267,15 @@ body{
     padding:12px;
     font-size:14px;
   }
+
+  #reward-area{
+    margin-top:18px;
+    padding-top:18px;
+  }
 }
 </style>
 </head>
+
 <body>
 
 <section class="hero">
@@ -225,7 +288,6 @@ body{
 </section>
 
 <div class="container">
-
   <div class="card">
 
     <div id="message">
@@ -239,15 +301,26 @@ body{
     </div>
 
     <div class="grid">
-      <div class="stamp" id="spot1">🏛<br>SPOT1</div>
-      <div class="stamp" id="spot2">🔬<br>SPOT2</div>
-      <div class="stamp" id="spot3">🎨<br>SPOT3</div>
+      <div class="stamp" id="spot1">
+        <span>🏛</span>
+        <span>SPOT1</span>
+      </div>
+      <div class="stamp" id="spot2">
+        <span>🔬</span>
+        <span>SPOT2</span>
+      </div>
+      <div class="stamp" id="spot3">
+        <span>🎨</span>
+        <span>SPOT3</span>
+      </div>
     </div>
 
     <div id="reward-area">
       <h3>応募条件達成</h3>
-      <br>
-      #応募フォームへ進む</a>
+      <p>下のボタンから応募フォームへお進みください。</p>
+      #
+        応募フォームへ進む
+      </a>
     </div>
 
     <div class="actions">
@@ -257,160 +330,186 @@ body{
     </div>
 
   </div>
-
 </div>
 
 <script>
-/* ===== THREE ===== */
+/* ===== THREE.JS ===== */
 
-const scene = new THREE.Scene();
+(function(){
+  if(typeof THREE === "undefined"){
+    document.getElementById("message").innerText =
+      "3Dライブラリの読み込みに失敗しました。通信環境をご確認ください。";
+    return;
+  }
 
-const camera = new THREE.PerspectiveCamera(
-  60,
-  window.innerWidth / document.querySelector('.hero').offsetHeight,
-  0.1,
-  100
-);
+  const hero = document.querySelector(".hero");
+  const canvas = document.getElementById("bg3d");
 
-camera.position.z = 8;
+  const scene = new THREE.Scene();
 
-const renderer = new THREE.WebGLRenderer({
-  canvas: document.getElementById('bg3d'),
-  alpha:true,
-  antialias:true
-});
+  const camera = new THREE.PerspectiveCamera(
+    60,
+    hero.clientWidth / hero.clientHeight,
+    0.1,
+    100
+  );
 
-function resize(){
-  const hero = document.querySelector('.hero');
-  renderer.setSize(hero.clientWidth, hero.clientHeight);
-  camera.aspect = hero.clientWidth / hero.clientHeight;
-  camera.updateProjectionMatrix();
-}
+  camera.position.z = 8;
 
-resize();
-window.addEventListener('resize', resize);
+  const renderer = new THREE.WebGLRenderer({
+    canvas:canvas,
+    alpha:true,
+    antialias:true
+  });
 
-scene.add(new THREE.AmbientLight(0xffffff,1));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-const geo = new THREE.IcosahedronGeometry(2.2,1);
+  function resize(){
+    const width = hero.clientWidth;
+    const height = hero.clientHeight;
 
-const wire = new THREE.LineSegments(
-  new THREE.WireframeGeometry(geo),
-  new THREE.LineBasicMaterial({
-    color:0x222222,
-    transparent:true,
-    opacity:0.4
-  })
-);
+    renderer.setSize(width, height, false);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  }
 
-scene.add(wire);
+  resize();
+  window.addEventListener("resize", resize);
 
-const particlesGeo = new THREE.BufferGeometry();
-const particlesCount = 500;
-const positions = new Float32Array(particlesCount * 3);
+  scene.add(new THREE.AmbientLight(0xffffff, 1));
 
-for(let i=0;i<particlesCount*3;i++){
-  positions[i] = (Math.random()-0.5)*20;
-}
+  const light = new THREE.DirectionalLight(0xffffff, 0.8);
+  light.position.set(3, 4, 6);
+  scene.add(light);
 
-particlesGeo.setAttribute(
-  'position',
-  new THREE.BufferAttribute(positions,3)
-);
+  /* 3D要素 1：ワイヤーフレーム多面体 */
+  const geo = new THREE.IcosahedronGeometry(2.2, 1);
 
-const particles = new THREE.Points(
-  particlesGeo,
-  new THREE.PointsMaterial({
-    color:0x222222,
-    size:0.03,
-    transparent:true,
-    opacity:0.35
-  })
-);
+  const wire = new THREE.LineSegments(
+    new THREE.WireframeGeometry(geo),
+    new THREE.LineBasicMaterial({
+      color:0x222222,
+      transparent:true,
+      opacity:0.42
+    })
+  );
 
-scene.add(particles);
+  scene.add(wire);
 
-function animate(){
-  requestAnimationFrame(animate);
+  /* 3D要素 2：パーティクル */
+  const particlesGeo = new THREE.BufferGeometry();
+  const particlesCount = 500;
+  const positions = new Float32Array(particlesCount * 3);
 
-  wire.rotation.x += 0.002;
-  wire.rotation.y += 0.004;
+  for(let i = 0; i < particlesCount * 3; i++){
+    positions[i] = (Math.random() - 0.5) * 20;
+  }
 
-  particles.rotation.y += 0.0005;
+  particlesGeo.setAttribute(
+    "position",
+    new THREE.BufferAttribute(positions, 3)
+  );
 
-  renderer.render(scene,camera);
-}
+  const particles = new THREE.Points(
+    particlesGeo,
+    new THREE.PointsMaterial({
+      color:0x222222,
+      size:0.035,
+      transparent:true,
+      opacity:0.28
+    })
+  );
 
-animate();
+  scene.add(particles);
+
+  function animate(){
+    requestAnimationFrame(animate);
+
+    wire.rotation.x += 0.002;
+    wire.rotation.y += 0.004;
+
+    particles.rotation.y += 0.0006;
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+})();
 
 /* ===== STAMP RALLY ===== */
 
 const GOOGLE_FORM_BASE_URL =
-'https://docs.google.com/forms/d/e/1FAIpQLSfANqr-pSf8YsipbWxG2BcfpK0Ewu2GmLzGp9SPbitEzAIeEA/viewform?usp=pp_url';
+  "https://docs.google.com/forms/d/e/1FAIpQLSfANqr-pSf8YsipbWxG2BcfpK0Ewu2GmLzGp9SPbitEzAIeEA/viewform?usp=pp_url";
 
 const FORM_ENTRY_IDS = {
- stamps:'entry.1967784020',
- count:'entry.775462935'
+  stamps:"entry.1967784020",
+  count:"entry.775462935"
 };
 
-const STORAGE_KEY='stamp_rally_progress_v2';
-const ALL_SPOTS=['spot1','spot2','spot3'];
-const REQUIRED_STAMPS=1;
+const STORAGE_KEY = "stamp_rally_progress_v2";
+const ALL_SPOTS = ["spot1", "spot2", "spot3"];
+const REQUIRED_STAMPS = 1;
 
-let progress={};
+let progress = {};
 
 try{
- const saved=localStorage.getItem(STORAGE_KEY);
- if(saved) progress=JSON.parse(saved);
-}catch(e){}
-
-const urlParams=new URLSearchParams(location.search);
-const currentSpot=urlParams.get('spot');
-
-if(currentSpot && ALL_SPOTS.includes(currentSpot)){
- progress[currentSpot]=true;
- localStorage.setItem(
-  STORAGE_KEY,
-  JSON.stringify(progress)
- );
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if(saved){
+    progress = JSON.parse(saved);
+  }
+}catch(e){
+  progress = {};
 }
 
-let collected=0;
-const collectedSpots=[];
+const urlParams = new URLSearchParams(window.location.search);
+const currentSpot = urlParams.get("spot");
 
-ALL_SPOTS.forEach(id=>{
- if(progress[id]){
-  collected++;
-  collectedSpots.push(id);
-  document.getElementById(id).classList.add('active');
- }
+if(currentSpot && ALL_SPOTS.includes(currentSpot)){
+  progress[currentSpot] = true;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  document.getElementById("message").innerText =
+    "「" + currentSpot + "」のスタンプをゲット！";
+}
+
+let collected = 0;
+const collectedSpots = [];
+
+ALL_SPOTS.forEach(function(id){
+  if(progress[id]){
+    collected++;
+    collectedSpots.push(id);
+
+    const stamp = document.getElementById(id);
+    if(stamp){
+      stamp.classList.add("active");
+    }
+  }
 });
 
-document.getElementById('progress-bar').innerText=
-`スタンプ ${collected} / ${ALL_SPOTS.length}`;
+document.getElementById("progress-bar").innerText =
+  "スタンプ " + collected + " / " + ALL_SPOTS.length;
 
-document.getElementById('track-fill').style.width=
-(collected/ALL_SPOTS.length*100)+'%';
+document.getElementById("track-fill").style.width =
+  Math.min(100, collected / ALL_SPOTS.length * 100) + "%";
 
-if(collected>=REQUIRED_STAMPS){
+if(collected >= REQUIRED_STAMPS){
+  const formUrl =
+    GOOGLE_FORM_BASE_URL +
+    "&" + FORM_ENTRY_IDS.stamps + "=" + encodeURIComponent(collectedSpots.join(",")) +
+    "&" + FORM_ENTRY_IDS.count + "=" + encodeURIComponent(collected);
 
- const url=
- GOOGLE_FORM_BASE_URL+
- `&${FORM_ENTRY_IDS.stamps}=${encodeURIComponent(collectedSpots.join(','))}`+
- `&${FORM_ENTRY_IDS.count}=${collected}`;
+  document.getElementById("reward-area").style.display = "block";
+  document.getElementById("form-link").href = formUrl;
 
- document.getElementById('reward-area').style.display='block';
- document.getElementById('form-link').href=url;
-
- document.getElementById('message').innerText=
- '応募条件を達成しました';
+  document.getElementById("message").innerText =
+    "応募条件を達成しました";
 }
 
 function resetStamps(){
- if(confirm('リセットしますか？')){
-  localStorage.removeItem(STORAGE_KEY);
-  location.href=location.pathname;
- }
+  if(confirm("スタンプをリセットしますか？")){
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.href = window.location.pathname;
+  }
 }
 </script>
 
