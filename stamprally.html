@@ -126,6 +126,7 @@
   /* =========================================================
      MOBILE : 1画面完結レイアウト（スクロール最小化）
      3Dビジュアル＋スタンプ＋メニューを 100dvh に収める
+     ※内容が収まらない場合は切れずにスクロールで表示
      ========================================================= */
   @media(max-width:600px){
     /* ヒーローを画面上部の一部に圧縮 */
@@ -138,19 +139,19 @@
     .cta-row{display:none;}             /* 下部パネルに集約 */
     .scroll-hint{display:none;}
 
-    /* 残りの領域にパネルを収める（縦フィット） */
+    /* 残りの領域にパネルを収める（縦フィット／収まらなければ伸びてスクロール） */
     .wrap{
-      height:66dvh;
+      min-height:66dvh;
       max-width:none;margin:0;padding:0;
       display:flex;flex-direction:column;
     }
     .kicker, .section-title, .rule, .section-lead{display:none;} /* 見出し省略で圧縮 */
 
     .panel{
-      flex:1;min-height:0;margin:0;border:none;border-top:1px solid var(--line);
+      flex:1 0 auto;margin:0;border:none;border-top:1px solid var(--line);
       border-radius:16px 16px 0 0;background:var(--panel);
-      padding:18px 18px calc(14px + env(safe-area-inset-bottom));
-      display:flex;flex-direction:column;justify-content:space-between;
+      padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+      display:flex;flex-direction:column;justify-content:space-between;gap:14px;
       box-shadow:0 -8px 24px rgba(0,0,0,.05);
     }
     #message{font-size:14px;min-height:0;}
